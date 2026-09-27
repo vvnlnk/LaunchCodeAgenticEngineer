@@ -10,12 +10,22 @@ from __future__ import annotations
 
 
 def format_currency(amount: float) -> str:
+    """Return an amount as a US dollar string with thousands separators.
+
+    Negative amounts are rendered with the sign ahead of the symbol, as in
+    ``-$1,234.56``.
+    """
     if amount < 0:
         return f"-${abs(amount):,.2f}"
     return f"${amount:,.2f}"
 
 
 def build_report_title(project_name: str, version: str) -> str:
+    """Return a report title in the form ``Project Name — version``.
+
+    Surrounding and repeated whitespace is collapsed. A blank project name
+    falls back to ``Untitled Project`` and a blank version to ``draft``.
+    """
     clean_project = " ".join(project_name.strip().split())
     clean_version = version.strip()
 
@@ -28,6 +38,15 @@ def build_report_title(project_name: str, version: str) -> str:
 
 
 def mask_email(email: str) -> str:
+    """Return an email address with its local part partially masked.
+
+    The first and last characters of the local part are kept and the rest are
+    replaced with asterisks; a one-character local part becomes ``*`` and a
+    two-character one keeps only its first character. The domain is lowercased.
+
+    Raises:
+        ValueError: If the address has no ``@``, or an empty local part or domain.
+    """
     email = email.strip()
     if "@" not in email:
         raise ValueError("email must contain @")
@@ -47,6 +66,12 @@ def mask_email(email: str) -> str:
 
 
 def generate_summary_line(name: str, status: str, score: int) -> str:
+    """Return a one-line summary in the form ``Name: status (score)``.
+
+    The name is whitespace-collapsed and title-cased, falling back to
+    ``Unknown`` when blank. The status is lowercased and underscores become
+    spaces, so ``IN_PROGRESS`` renders as ``in progress``.
+    """
     display_name = " ".join(name.strip().split()).title()
     display_status = status.strip().lower().replace("_", " ")
 
@@ -57,6 +82,14 @@ def generate_summary_line(name: str, status: str, score: int) -> str:
 
 
 def create_markdown_table(rows: list[dict[str, object]], columns: list[str]) -> str:
+    """Return a Markdown table built from rows, one column per key in columns.
+
+    Values are stringified in column order and a key missing from a row renders
+    as an empty cell. With no rows, the header and separator are still returned.
+
+    Raises:
+        ValueError: If columns is empty.
+    """
     if not columns:
         raise ValueError("columns cannot be empty")
 
@@ -72,6 +105,15 @@ def create_markdown_table(rows: list[dict[str, object]], columns: list[str]) -> 
 
 
 def truncate_text(text: str, max_length: int = 80) -> str:
+    """Return text with whitespace collapsed, shortened to max_length characters.
+
+    Text that already fits is returned unchanged. Longer text is cut to
+    ``max_length - 3`` characters, right-stripped, and suffixed with ``...``,
+    so the result never exceeds max_length.
+
+    Raises:
+        ValueError: If max_length is less than 4.
+    """
     if max_length < 4:
         raise ValueError("max_length must be at least 4")
 
