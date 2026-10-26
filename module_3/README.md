@@ -54,13 +54,17 @@ docker run -it --rm \
   -v claude-auth:/claude-auth \
   -v "$PWD":/workspace \
   -v "$PWD/.memory":/memory \
-  -v "$HOME/.gmail-mcp":/root/.gmail-mcp \
+  -v "$HOME/.gmail-mcp":/home/dev/.gmail-mcp \
   us-central1-docker.pkg.dev/hire-human/hire-human-ai/agentic_engineer_3:latest
 ```
 
 Place `credentials.json` (from Google Cloud Console) in `$PWD` before running. The Gmail MCP will trigger OAuth on first use and persist the token in `~/.gmail-mcp/`.
 
 > **Claude authentication:** The `-v claude-auth:/claude-auth` mount is a shared named volume that persists your Claude Code login across container runs — and across every course module. You go through Claude's first-run onboarding and log in once; every later container restores your credential and skips onboarding. Only your credential is stored on the volume — skills, agents, settings, the status line, and each image's MCP servers stay baked into the image.
+
+> **Non-root user and file ownership:** The container runs as a non-root user, `dev` (home `/home/dev`), not `root`. On startup the entrypoint gives `dev` the same UID/GID as the owner of the folder mounted at `/workspace`. Files that you, Claude, or any other agent create there are therefore owned by your host user, and everyone can edit them without `sudo`. To pick the IDs yourself, add `-e HOST_UID=$(id -u) -e HOST_GID=$(id -g)`. New files are group-writable (`umask 0002`). Inside the container `dev` has passwordless `sudo` for `apt-get` and other system changes. `pip install` without `sudo` installs into `~/.local`. Claude Code's auto-updater is disabled, so rebuild the image to update Claude Code.
+>
+> For Gmail, create the host token folder before the first run (`mkdir -p ~/.gmail-mcp`). Otherwise Docker creates it owned by root, and the Gmail MCP server can't save its token there.
 
 ## Build
 
@@ -146,7 +150,7 @@ Any files created inside the container will be lost when it exits.
 
 ## MCP Servers
 
-MCP (Model Context Protocol) servers extend Claude Code so that prompts can take real-world actions — posting to Slack, reading email, etc. — without writing any extra code. Both servers are pre-installed as global npm packages and pre-configured in `/root/.claude/settings.json` inside the image.
+MCP (Model Context Protocol) servers extend Claude Code so that prompts can take real-world actions — posting to Slack, reading email, etc. — without writing any extra code. Both servers are pre-installed as global npm packages and pre-configured in `/home/dev/.claude/settings.json` inside the image.
 
 ### Slack MCP Server
 
@@ -188,7 +192,7 @@ docker run -it --rm \
   -v claude-auth:/claude-auth \
   -v "$PWD":/workspace \
   -v "$PWD/.memory":/memory \
-  -v "$HOME/.gmail-mcp":/root/.gmail-mcp \
+  -v "$HOME/.gmail-mcp":/home/dev/.gmail-mcp \
   agentic_engineer_3
 ```
 
@@ -213,7 +217,7 @@ Skills are custom slash commands invoked by typing `/skill-name` inside a Claude
 
 ### SKILL.md files
 
-Each skill lives in its own Markdown file at `.claude/skills/<skill-name>/SKILL.md`. Inside the container these are placed at `/root/.claude/skills/`.
+Each skill lives in its own Markdown file at `.claude/skills/<skill-name>/SKILL.md`. Inside the container these are placed at `/home/dev/.claude/skills/`.
 
 ```
 skills/
@@ -244,7 +248,7 @@ Steps:
 EOF
 ```
 
-Then rebuild the image so the file is copied into `/root/.claude/skills/`:
+Then rebuild the image so the file is copied into `/home/dev/.claude/skills/`:
 
 ```bash
 docker build -t agentic_engineer_3 .
@@ -255,14 +259,14 @@ docker build -t agentic_engineer_3 .
 You can also add a skill directly inside a running container without rebuilding the image. The full path inside the container is:
 
 ```
-/root/.claude/skills/<skill-name>/SKILL.md
+/home/dev/.claude/skills/<skill-name>/SKILL.md
 ```
 
 For example:
 
 ```bash
-mkdir -p /root/.claude/skills/my-skill
-nano /root/.claude/skills/my-skill/SKILL.md
+mkdir -p /home/dev/.claude/skills/my-skill
+nano /home/dev/.claude/skills/my-skill/SKILL.md
 ```
 
 Note: since the container is run with `--rm`, any skills added this way will be lost when the container exits. To persist them, add them to the `skills/` directory in this repo and rebuild.
@@ -273,7 +277,7 @@ Note: since the container is run with `--rm`, any skills added this way will be 
 
 Agents are autonomous sub-agents that Claude Code can spin up to handle specialized tasks. Unlike skills (which are slash commands you invoke), agents are specialists that Claude Code invokes automatically when the task matches, or that you can request explicitly in a prompt.
 
-Agents are defined as Markdown files with YAML frontmatter and stored in `.claude/agents/` (inside the container: `/root/.claude/agents/`). Source files live in `agents/` in this repo and are copied in at image build time.
+Agents are defined as Markdown files with YAML frontmatter and stored in `.claude/agents/` (inside the container: `/home/dev/.claude/agents/`). Source files live in `agents/` in this repo and are copied in at image build time.
 
 ### Pre-installed Agents
 
@@ -337,8 +341,8 @@ docker build -t agentic_engineer_3 .
 **Adding an agent at runtime (no rebuild required):**
 
 ```bash
-mkdir -p /root/.claude/agents
-nano /root/.claude/agents/my-agent.md
+mkdir -p /home/dev/.claude/agents
+nano /home/dev/.claude/agents/my-agent.md
 ```
 
 Note: agents added this way are lost when the container exits (since it runs with `--rm`). Add them to `agents/` in this repo and rebuild to persist them.

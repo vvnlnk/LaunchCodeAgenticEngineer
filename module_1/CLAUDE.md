@@ -32,6 +32,7 @@ Access at `http://localhost:8501`.
 - OpenCode (`opencode-ai`) installed globally via npm
 - ngrok for tunneling
 - Workspace mounted at `/workspace`
+- Runs as non-root user `dev` (home `/home/dev`, passwordless `sudo`). The entrypoint matches its UID/GID to the `/workspace` owner
 
 ## Gmail API Setup
 

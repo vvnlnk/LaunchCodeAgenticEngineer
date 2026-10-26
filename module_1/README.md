@@ -11,7 +11,7 @@ The repository is split into one folder per course module (`module_1/`, `module_
 ```
 module_1/
 ├── Dockerfile              # Image definition: Python 3.12, Node.js, Claude Code, OpenCode, ngrok
-├── docker-entrypoint.sh    # Restores/persists the Claude login via the claude-auth volume
+├── docker-entrypoint.sh    # Drops to a non-root user matching the /workspace owner; restores/persists the Claude login via the claude-auth volume
 ├── requirements.txt        # Python packages installed in the image
 ├── settings.json           # Claude Code settings baked into the image (status line)
 ├── statusline.sh           # Claude Code status line: model, dir, context %, tokens, cost
@@ -71,6 +71,8 @@ docker run -it --rm -v claude-auth:/claude-auth -p 8501:8501 -v "$PWD":/workspac
 ```
 
 > **Claude authentication:** The `-v claude-auth:/claude-auth` mount is a shared named volume that persists your Claude Code login across container runs — and across every course module. You go through Claude's first-run onboarding and log in once; every later container restores your credential and skips onboarding. Only your credential is stored on the volume — skills, agents, settings, the status line, and each image's MCP servers stay baked into the image.
+
+> **Non-root user and file ownership:** The container runs as a non-root user, `dev` (home `/home/dev`), not `root`. On startup the entrypoint gives `dev` the same UID/GID as the owner of the folder mounted at `/workspace`. Files that you, Claude, or any other agent create there are therefore owned by your host user, and everyone can edit them without `sudo`. To pick the IDs yourself, add `-e HOST_UID=$(id -u) -e HOST_GID=$(id -g)`. New files are group-writable (`umask 0002`). Inside the container `dev` has passwordless `sudo` for `apt-get` and other system changes. `pip install` without `sudo` installs into `~/.local`. Claude Code's auto-updater is disabled, so rebuild the image to update Claude Code.
 
 ## Build
 

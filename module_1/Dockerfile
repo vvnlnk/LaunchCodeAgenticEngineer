@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     procps \
     nodejs \
     npm \
+    sudo \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
@@ -30,23 +31,38 @@ RUN curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
     && apt-get update && apt-get install -y ngrok \
     && rm -rf /var/lib/apt/lists/*
 
+# Non-root user. The entrypoint remaps its UID/GID at runtime to match the
+# owner of the bind-mounted /workspace, so files stay editable on the host.
+# Passwordless sudo keeps apt/global installs possible.
+ARG UID=1000
+ARG GID=1000
+RUN groupadd -g $GID dev \
+    && useradd -m -u $UID -g $GID -s /bin/bash dev \
+    && echo 'dev ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/dev \
+    && chmod 440 /etc/sudoers.d/dev \
+    && chown dev:dev /workspace
+
+# Global npm dir is root-owned, so Claude Code can't self-update; user pip
+# installs land in ~/.local.
+ENV DISABLE_AUTOUPDATER=1 \
+    PATH=/home/dev/.local/bin:$PATH
+
 # Claude Code configuration: default settings + status line
-RUN mkdir -p /root/.claude
-COPY settings.json /root/.claude/settings.json
-COPY statusline.sh /root/.claude/statusline.sh
-RUN chmod +x /root/.claude/statusline.sh
+COPY --chown=dev:dev settings.json /home/dev/.claude/settings.json
+COPY --chown=dev:dev statusline.sh /home/dev/.claude/statusline.sh
+RUN chmod +x /home/dev/.claude/statusline.sh
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Student shell quality-of-life improvements
-RUN echo 'export PS1="ai-course:\\w# "' >> /root/.bashrc && \
-    echo 'alias ll="ls -alF"' >> /root/.bashrc && \
-    echo 'alias la="ls -A"' >> /root/.bashrc && \
-    echo 'alias l="ls -CF"' >> /root/.bashrc && \
-    echo 'alias python="python3"' >> /root/.bashrc && \
-    echo 'alias pip="pip3"' >> /root/.bashrc
+RUN echo 'export PS1="ai-course:\\w\$ "' >> /home/dev/.bashrc && \
+    echo 'alias ll="ls -alF"' >> /home/dev/.bashrc && \
+    echo 'alias la="ls -A"' >> /home/dev/.bashrc && \
+    echo 'alias l="ls -CF"' >> /home/dev/.bashrc && \
+    echo 'alias python="python3"' >> /home/dev/.bashrc && \
+    echo 'alias pip="pip3"' >> /home/dev/.bashrc
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["/bin/bash"]

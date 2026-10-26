@@ -8,7 +8,7 @@ This is a Docker-based development environment for LaunchCode's **Agentic Progra
 
 ## MCP Servers
 
-Two MCP servers are pre-installed and configured in `/root/.claude/settings.json`:
+Two MCP servers are pre-installed and configured in `/home/dev/.claude/settings.json`:
 
 ### Slack
 - Package: `@modelcontextprotocol/server-slack`
@@ -17,7 +17,7 @@ Two MCP servers are pre-installed and configured in `/root/.claude/settings.json
 
 ### Gmail
 - Package: `@gongrzhe/server-gmail-autoauth-mcp`
-- OAuth credentials stored in `/root/.gmail-mcp/` (persist this directory across container runs if needed)
+- OAuth credentials stored in `/home/dev/.gmail-mcp/` (persist this directory across container runs if needed)
 - Allows Claude Code prompts to read, search, and send Gmail messages.
 
 ## Skills
@@ -31,7 +31,7 @@ Pre-configured skills (invoked with `/skill-name` in Claude Code):
 | `/send-email` | Draft and send an email via Gmail |
 | `/summarize-session` | Bullet-point summary of the current session |
 
-Skills are defined in `settings.json` which is copied to `/root/.claude/settings.json` during image build.
+Skills are defined in `settings.json` which is copied to `/home/dev/.claude/settings.json` during image build.
 
 ## Agents
 
@@ -42,7 +42,7 @@ Pre-configured sub-agents available inside Claude Code sessions. Agents are auto
 | `code-reviewer` | Reviews recent git changes for quality, security, and maintainability |
 | `email-summarize` | Checks new Gmail messages and posts sender + 2-line summary to #test Slack channel |
 
-Agents are defined as Markdown files with YAML frontmatter in `/root/.claude/agents/` inside the container. Source files live in the `agents/` directory of this repo and are copied in at build time.
+Agents are defined as Markdown files with YAML frontmatter in `/home/dev/.claude/agents/` inside the container. Source files live in the `agents/` directory of this repo and are copied in at build time.
 
 **Running an agent:**
 
@@ -81,6 +81,7 @@ Access at `http://localhost:8501`.
 - MCP server: `@gongrzhe/server-gmail-autoauth-mcp`
 - ngrok for tunneling
 - Workspace mounted at `/workspace`
+- Runs as non-root user `dev` (home `/home/dev`, passwordless `sudo`). The entrypoint matches its UID/GID to the `/workspace` owner
 
 ## Gmail API Setup
 
