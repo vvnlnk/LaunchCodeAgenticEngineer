@@ -3,6 +3,8 @@ module_3/.memory/storage.db
 module_1/collision_test.txt
 LaunchCodeAgenticEngineer.code-workspace
 credentials.json
+google_cred.json
+token.json
 summary.txt
 test.txt
 .DS_Store

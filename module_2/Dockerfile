@@ -63,6 +63,9 @@ COPY --chown=dev:dev settings.json /home/dev/.claude/settings.json
 COPY --chown=dev:dev statusline.sh /home/dev/.claude/statusline.sh
 RUN chmod +x /home/dev/.claude/statusline.sh
 
+# Gmail MCP keep-alive workaround (preloaded by the entrypoint)
+COPY gmail-no-keepalive.cjs /usr/local/lib/gmail-no-keepalive.cjs
+
 # Copy entrypoint script
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
