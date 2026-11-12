@@ -15,6 +15,7 @@ Build and run locally:
 cd module_2
 docker build -t agentic_engineer_2 .
 docker run -it --rm -p 8501:8501 -p 8502:8502 \
+  -e TZ=America/New_York \
   -e SLACK_BOT_TOKEN=xoxb-your-token \
   -e SLACK_TEAM_ID=T0123456 \
   -v claude-auth:/claude-auth \
@@ -22,10 +23,13 @@ docker run -it --rm -p 8501:8501 -p 8502:8502 \
   agentic_engineer_2
 ```
 
+`-e TZ=...` sets the container's timezone. Replace `America/New_York` with your own [IANA timezone name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) (e.g. `America/Chicago`, `Europe/London`). If you leave it out, the image's default is used (`America/New_York` in the current `Dockerfile`; images built before that change use UTC).
+
 Or pull the pre-built image from DockerHub:
 
 ```bash
 docker run -it --rm -p 8501:8501 -p 8502:8502 \
+  -e TZ=America/New_York \
   -e SLACK_BOT_TOKEN=xoxb-your-token \
   -e SLACK_TEAM_ID=T0123456 \
   -v claude-auth:/claude-auth \
@@ -37,6 +41,7 @@ Full setup with Slack and Gmail (reads credentials from your shell environment):
 
 ```bash
 docker run -it --rm \
+  -e TZ=America/New_York \
   -p 8501:8501 -p 8502:8502 \
   -e OPENROUTER_API_KEY=$OPENROUTER_API_KEY \
   -e SLACK_BOT_TOKEN=$SLACK_BOT_TOKEN \
@@ -74,6 +79,7 @@ docker build --no-cache -t agentic_engineer_2 .
 ```bash
 # macOS / Linux
 docker run -it --rm -p 8501:8501 -p 8502:8502 \
+  -e TZ=America/New_York \
   -e SLACK_BOT_TOKEN=xoxb-your-token \
   -e SLACK_TEAM_ID=T0123456 \
   -v claude-auth:/claude-auth \
@@ -82,6 +88,7 @@ docker run -it --rm -p 8501:8501 -p 8502:8502 \
 
 # Windows (PowerShell)
 docker run -it --rm -p 8501:8501 -p 8502:8502 `
+  -e TZ=America/New_York `
   -e SLACK_BOT_TOKEN=xoxb-your-token `
   -e SLACK_TEAM_ID=T0123456 `
   -v claude-auth:/claude-auth `
@@ -94,7 +101,7 @@ Files created or edited inside `/workspace` are saved to your local folder and p
 ### Without a local workspace
 
 ```bash
-docker run -it --rm -v claude-auth:/claude-auth -p 8501:8501 agentic_engineer_2
+docker run -it --rm -e TZ=America/New_York -v claude-auth:/claude-auth -p 8501:8501 agentic_engineer_2
 ```
 
 Any files created inside the container will be lost when it exits.
@@ -139,6 +146,7 @@ MCP (Model Context Protocol) servers extend Claude Code so that prompts can take
 
 ```bash
 docker run -it --rm -p 8501:8501 \
+  -e TZ=America/New_York \
   -v claude-auth:/claude-auth \
   -v "$PWD":/workspace \
   -v "$HOME/.gmail-mcp":/home/dev/.gmail-mcp \
@@ -352,6 +360,7 @@ Once published, students can run the image directly without cloning the repo or 
 
 ```bash
 docker run -it --rm -p 8501:8501 -p 8502:8502 \
+  -e TZ=America/New_York \
   -e SLACK_BOT_TOKEN=xoxb-your-token \
   -e SLACK_TEAM_ID=T0123456 \
   -v claude-auth:/claude-auth \

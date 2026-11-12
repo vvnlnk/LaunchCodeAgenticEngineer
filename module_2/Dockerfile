@@ -52,6 +52,9 @@ RUN groupadd -g $GID dev \
 ENV DISABLE_AUTOUPDATER=1 \
     PATH=/home/dev/.local/bin:$PATH
 
+# Default timezone; override at run time with -e TZ=<IANA name>.
+ENV TZ=America/New_York
+
 # Set up Claude Code configuration directory and copy settings template
 COPY --chown=dev:dev skills/ /home/dev/.claude/skills/
 
